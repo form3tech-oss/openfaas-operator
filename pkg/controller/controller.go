@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	faasv1 "github.com/openfaas-incubator/openfaas-operator/pkg/apis/openfaas/v1alpha2"
 	clientset "github.com/openfaas-incubator/openfaas-operator/pkg/client/clientset/versioned"
 	faasscheme "github.com/openfaas-incubator/openfaas-operator/pkg/client/clientset/versioned/scheme"
@@ -124,18 +123,11 @@ func NewController(
 	// Set up an event handler for when Function resources change
 	faasInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.enqueueFunction,
-		UpdateFunc: func(old, new interface{}) {
-			oldFn, ok := checkCustomResourceType(old)
-			if !ok {
+		UpdateFunc: func(_, obj interface{}) {
+			if _, ok := checkCustomResourceType(obj); !ok {
 				return
 			}
-			newFn, ok := checkCustomResourceType(new)
-			if !ok {
-				return
-			}
-			if diff := cmp.Diff(oldFn.Spec, newFn.Spec); diff != "" {
-				controller.enqueueFunction(new)
-			}
+			controller.enqueueFunction(obj)
 		},
 	})
 
