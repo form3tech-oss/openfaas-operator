@@ -124,11 +124,10 @@ func NewController(
 	faasInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.enqueueFunction,
 		UpdateFunc: func(_, obj interface{}) {
-			f, ok := checkCustomResourceType(obj)
-			if !ok {
+			if _, ok := checkCustomResourceType(obj); !ok {
 				return
 			}
-			controller.enqueueFunction(f)
+			controller.enqueueFunction(obj)
 		},
 	})
 

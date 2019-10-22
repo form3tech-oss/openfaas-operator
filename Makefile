@@ -1,29 +1,19 @@
 .PHONY: build build-armhf push test verify-codegen ci-armhf-build ci-armhf-push ci-arm64-build ci-arm64-push
-TAG?=latest
 
+DOCKER_IMG ?= form3tech/openfaas-operator
+DOCKER_TAG ?= $$(git describe --tags --dirty="-dev")
+
+.PHONY: build
 build:
-	docker build -t openfaas/openfaas-operator:$(TAG) . -f Dockerfile
+	docker build --build-arg VERSION=$(DOCKER_TAG) -t $(DOCKER_IMG):$(DOCKER_TAG) . -f Dockerfile
 
-build-armhf:
-	docker build -t openfaas/openfaas-operator:$(TAG)-armhf . -f Dockerfile.armhf
-
+.PHONY: push
 push:
-	docker push openfaas/openfaas-operator:$(TAG)
+	echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
+	docker push $(DOCKER_IMG):$(DOCKER_TAG)
 
 test:
 	go test ./...
 
 verify-codegen:
 	./hack/verify-codegen.sh
-
-ci-armhf-build:
-	docker build -t openfaas/openfaas-operator:$(TAG)-armhf . -f Dockerfile.armhf
-
-ci-armhf-push:
-	docker push openfaas/openfaas-operator:$(TAG)-armhf
-
-ci-arm64-build:
-	docker build -t openfaas/openfaas-operator:$(TAG)-arm64 . -f Dockerfile.arm64
-
-ci-arm64-push:
-	docker push openfaas/openfaas-operator:$(TAG)-arm64
