@@ -21,7 +21,7 @@ rules:
   resources: ["services"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: [""]
-  resources: ["secrets", "configmaps"]
+  resources: ["secrets"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["apps", "extensions"]
   resources: ["deployments"]
@@ -36,6 +36,43 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: openfaas-operator-rw
+subjects:
+- kind: ServiceAccount
+  name: openfaas-operator
+  namespace: openfaas
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: openfaas-operator
+  namespace: openfaas
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: openfaas-operator
+  namespace: openfaas
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: openfaas-operator
 subjects:
 - kind: ServiceAccount
   name: openfaas-operator

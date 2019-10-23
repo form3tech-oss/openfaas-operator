@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"k8s.io/client-go/tools/record"
 	"os"
 	"time"
 
@@ -24,6 +23,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	"k8s.io/client-go/tools/record"
 	glog "k8s.io/klog"
 
 	// required to authenticate against GKE clusters
@@ -139,18 +139,10 @@ func main() {
 		if err = ctrl.Run(1, stopCh); err != nil {
 			glog.Fatalf("Error running controller: %s", err.Error())
 		}
+		// There is a separate goroutine trying to renew the leader election lock, so we must forcibly exit now that controllers have been shut down.
+		os.Exit(0)
 	}
-
-	enableLeaderElection := false
-	if val, exists := os.LookupEnv("enable_leader_election"); exists && val == "true" {
-		enableLeaderElection = true
-	}
-
-	if enableLeaderElection {
-		startLeaderElection(ctx, runController, functionNamespace, kubeClient)
-	} else {
-		runController()
-	}
+	startLeaderElection(ctx, runController, "openfaas", kubeClient)
 }
 
 func setupLogging() {
