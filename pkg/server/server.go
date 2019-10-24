@@ -8,7 +8,7 @@ import (
 	"time"
 
 	clientset "github.com/openfaas-incubator/openfaas-operator/pkg/client/clientset/versioned"
-	"github.com/openfaas/faas-provider"
+	bootstrap "github.com/openfaas/faas-provider"
 	"github.com/openfaas/faas-provider/types"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	kubeinformers "k8s.io/client-go/informers"
@@ -64,16 +64,17 @@ func Start(client clientset.Interface,
 	deploymentLister := deploymentInformer.Lister().Deployments(functionNamespace)
 
 	bootstrapHandlers := types.FaaSHandlers{
-		FunctionProxy:  makeProxy(functionNamespace, time.Duration(readTimeout)*time.Second),
-		DeleteHandler:  makeDeleteHandler(functionNamespace, client),
-		DeployHandler:  makeApplyHandler(functionNamespace, client),
-		FunctionReader: makeListHandler(functionNamespace, client, deploymentLister),
-		ReplicaReader:  makeReplicaReader(functionNamespace, client, kube, deploymentLister),
-		ReplicaUpdater: makeReplicaHandler(functionNamespace, client),
-		UpdateHandler:  makeApplyHandler(functionNamespace, client),
-		HealthHandler:  makeHealthHandler(),
-		InfoHandler:    makeInfoHandler(),
-		SecretHandler:  makeSecretHandler(functionNamespace, kube),
+		FunctionProxy:        makeProxy(functionNamespace, time.Duration(readTimeout)*time.Second),
+		DeleteHandler:        makeDeleteHandler(functionNamespace, client),
+		DeployHandler:        makeApplyHandler(functionNamespace, client),
+		FunctionReader:       makeListHandler(functionNamespace, client, deploymentLister),
+		ReplicaReader:        makeReplicaReader(functionNamespace, client, kube, deploymentLister),
+		ReplicaUpdater:       makeReplicaHandler(functionNamespace, client),
+		UpdateHandler:        makeApplyHandler(functionNamespace, client),
+		HealthHandler:        makeHealthHandler(),
+		InfoHandler:          makeInfoHandler(),
+		SecretHandler:        makeSecretHandler(functionNamespace, kube),
+		ListNamespaceHandler: makeListNamespaceHandler(functionNamespace),
 	}
 
 	bootstrapConfig := types.FaaSConfig{
