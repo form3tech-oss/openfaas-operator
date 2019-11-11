@@ -5,6 +5,7 @@ import (
 	"github.com/openfaas/faas-netes/k8s"
 	"github.com/openfaas/faas-provider/types"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
@@ -39,7 +40,7 @@ func functionToFunctionRequest(in *faasv1.Function) types.FunctionDeployment {
 		Image:                  in.Spec.Image,
 		Limits:                 lim,
 		Requests:               req,
-		ReadOnlyRootFilesystem: in.Spec.ReadOnlyRootFilesystem,
+		ReadOnlyRootFilesystem: true, // Force the usage of a read-only root filesystem.
 	}
 }
 
@@ -71,4 +72,18 @@ func (f *FunctionFactory) ConfigureReadOnlyRootFilesystem(function *faasv1.Funct
 
 func (f *FunctionFactory) ConfigureContainerUserID(deployment *appsv1.Deployment) {
 	f.Factory.ConfigureContainerUserID(deployment)
+}
+
+func (f *FunctionFactory) ConfigureSecurityContext(deployment *appsv1.Deployment) {
+	allowPrivilegeEscalation := false
+	deployment.Spec.Template.Spec.Containers[0].SecurityContext.AllowPrivilegeEscalation = &allowPrivilegeEscalation
+	deployment.Spec.Template.Spec.Containers[0].SecurityContext.Capabilities = &corev1.Capabilities{
+		Drop: []corev1.Capability{"ALL"},
+	}
+	runAsNonRoot := true
+	deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsGroup = deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser
+	deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsNonRoot = &runAsNonRoot
+	deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
+		FSGroup: deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser,
+	}
 }

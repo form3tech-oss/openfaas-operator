@@ -103,6 +103,7 @@ func newDeployment(
 							},
 							ImagePullPolicy: corev1.PullPolicy(factory.Factory.Config.ImagePullPolicy),
 							Env:             envVars,
+							EnvFrom:         function.Spec.EnvFrom,
 							Resources:       *resources,
 							LivenessProbe:   probes.Liveness,
 							ReadinessProbe:  probes.Readiness,
@@ -119,6 +120,7 @@ func newDeployment(
 
 	factory.ConfigureReadOnlyRootFilesystem(function, deploymentSpec)
 	factory.ConfigureContainerUserID(deploymentSpec)
+	factory.ConfigureSecurityContext(deploymentSpec)
 
 	if err := UpdateSecrets(function, deploymentSpec, existingSecrets); err != nil {
 		glog.Warningf("Function %s secrets update failed: %v",
