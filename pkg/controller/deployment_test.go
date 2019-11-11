@@ -6,6 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
+	"reflect"
 	"testing"
 )
 
@@ -23,6 +24,29 @@ func Test_newDeployment(t *testing.T) {
 				"com.openfaas.health.http.path":         "/healthz",
 			},
 			ReadOnlyRootFilesystem: true,
+			EnvFrom: []corev1.EnvFromSource{
+				{
+					SecretRef: &corev1.SecretEnvSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "foo",
+						},
+					},
+				},
+				{
+					SecretRef: &corev1.SecretEnvSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "bar",
+						},
+					},
+				},
+				{
+					ConfigMapRef: &corev1.ConfigMapEnvSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "baz",
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -68,6 +92,11 @@ func Test_newDeployment(t *testing.T) {
 
 	if *(deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser) != k8s.SecurityContextUserID {
 		t.Errorf("RunAsUser should be %v", k8s.SecurityContextUserID)
+		t.Fail()
+	}
+
+	if !reflect.DeepEqual(deployment.Spec.Template.Spec.Containers[0].EnvFrom, function.Spec.EnvFrom) {
+		t.Errorf("EnvFrom should be %+#v", function.Spec.EnvFrom)
 		t.Fail()
 	}
 }

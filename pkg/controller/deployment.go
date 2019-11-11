@@ -103,6 +103,7 @@ func newDeployment(
 							},
 							ImagePullPolicy: corev1.PullPolicy(factory.Factory.Config.ImagePullPolicy),
 							Env:             envVars,
+							EnvFrom:         function.Spec.EnvFrom,
 							Resources:       *resources,
 							LivenessProbe:   probes.Liveness,
 							ReadinessProbe:  probes.Readiness,
