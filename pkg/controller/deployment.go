@@ -120,6 +120,7 @@ func newDeployment(
 
 	factory.ConfigureReadOnlyRootFilesystem(function, deploymentSpec)
 	factory.ConfigureContainerUserID(deploymentSpec)
+	factory.ConfigureSecurityContext(deploymentSpec)
 
 	if err := UpdateSecrets(function, deploymentSpec, existingSecrets); err != nil {
 		glog.Warningf("Function %s secrets update failed: %v",

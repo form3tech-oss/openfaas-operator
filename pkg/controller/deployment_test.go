@@ -23,7 +23,6 @@ func Test_newDeployment(t *testing.T) {
 				"com.openfaas.health.http.initialDelay": "2m",
 				"com.openfaas.health.http.path":         "/healthz",
 			},
-			ReadOnlyRootFilesystem: true,
 			EnvFrom: []corev1.EnvFromSource{
 				{
 					SecretRef: &corev1.SecretEnvSource{

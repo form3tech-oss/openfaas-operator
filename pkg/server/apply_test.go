@@ -47,11 +47,6 @@ func Test_makeApplyHandler(t *testing.T) {
 		t.Fatalf("error validating function: %v", err)
 	}
 
-	if !newFunction.Spec.ReadOnlyRootFilesystem {
-		t.Errorf("expected ReadOnlyRootFilesystem '%v' got: '%v'",
-			true, newFunction.Spec.ReadOnlyRootFilesystem)
-	}
-
 	if newFunction.Spec.Labels == nil || len(*newFunction.Spec.Labels) < 1 {
 		t.Fatal("expected one label got none")
 	}
@@ -96,11 +91,6 @@ func Test_makeApplyHandler(t *testing.T) {
 	if updatedFunction.Spec.Image != fn.Image {
 		t.Errorf("expected image '%s' got: '%s'",
 			fn.Image, updatedFunction.Spec.Image)
-	}
-
-	if updatedFunction.Spec.ReadOnlyRootFilesystem {
-		t.Errorf("expected ReadOnlyRootFilesystem '%v' got: '%v'",
-			false, updatedFunction.Spec.ReadOnlyRootFilesystem)
 	}
 
 	updatedLabels := *updatedFunction.Spec.Labels

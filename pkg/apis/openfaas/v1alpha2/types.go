@@ -20,19 +20,18 @@ type Function struct {
 
 // FunctionSpec is the spec for a Function resource
 type FunctionSpec struct {
-	Name                   string                 `json:"name"`
-	Image                  string                 `json:"image"`
-	Replicas               *int32                 `json:"replicas"`
-	Handler                string                 `json:"handler"`
-	Annotations            *map[string]string     `json:"annotations"`
-	Labels                 *map[string]string     `json:"labels"`
-	Environment            *map[string]string     `json:"environment"`
-	EnvFrom                []corev1.EnvFromSource `json:"envFrom"`
-	Constraints            []string               `json:"constraints"`
-	Secrets                []string               `json:"secrets"`
-	Limits                 *FunctionResources     `json:"limits"`
-	Requests               *FunctionResources     `json:"requests"`
-	ReadOnlyRootFilesystem bool                   `json:"readOnlyRootFilesystem"`
+	Name        string                 `json:"name"`
+	Image       string                 `json:"image"`
+	Replicas    *int32                 `json:"replicas"`
+	Handler     string                 `json:"handler"`
+	Annotations *map[string]string     `json:"annotations"`
+	Labels      *map[string]string     `json:"labels"`
+	Environment *map[string]string     `json:"environment"`
+	EnvFrom     []corev1.EnvFromSource `json:"envFrom"`
+	Constraints []string               `json:"constraints"`
+	Secrets     []string               `json:"secrets"`
+	Limits      *FunctionResources     `json:"limits"`
+	Requests    *FunctionResources     `json:"requests"`
 }
 
 // FunctionResources is used to set CPU and memory limits and requests
