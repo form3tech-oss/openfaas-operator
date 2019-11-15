@@ -63,7 +63,7 @@ func Test_newDeployment(t *testing.T) {
 				TimeoutSeconds:      3,
 				InitialDelaySeconds: 0,
 			},
-		})
+		}, true)
 
 	secrets := map[string]*corev1.Secret{}
 
@@ -89,8 +89,8 @@ func Test_newDeployment(t *testing.T) {
 		t.Fail()
 	}
 
-	if *(deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser) != k8s.SecurityContextUserID {
-		t.Errorf("RunAsUser should be %v", k8s.SecurityContextUserID)
+	if *(deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser) != runAsUser {
+		t.Errorf("RunAsUser should be %v", runAsUser)
 		t.Fail()
 	}
 

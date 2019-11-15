@@ -118,9 +118,7 @@ func newDeployment(
 		deploymentSpec.Spec.Template.Spec.ServiceAccountName = serviceAccount
 	}
 
-	factory.ConfigureReadOnlyRootFilesystem(function, deploymentSpec)
-	factory.ConfigureContainerUserID(deploymentSpec)
-	factory.ConfigureSecurityContext(deploymentSpec)
+	factory.ConfigureSecurityContext(function, deploymentSpec)
 
 	if err := UpdateSecrets(function, deploymentSpec, existingSecrets); err != nil {
 		glog.Warningf("Function %s secrets update failed: %v",

@@ -31,8 +31,9 @@ import (
 )
 
 var (
-	masterURL  string
-	kubeconfig string
+	kubeconfig               string
+	masterURL                string
+	configureSecurityContext bool
 )
 
 var pullPolicyOptions = map[string]bool{
@@ -42,6 +43,7 @@ var pullPolicyOptions = map[string]bool{
 }
 
 func init() {
+	flag.BoolVar(&configureSecurityContext, "configure-security-context", true, "Whether to configure the security context for functions.")
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 }
@@ -80,7 +82,6 @@ func main() {
 	deployConfig := k8s.DeploymentConfig{
 		RuntimeHTTPPort: 8080,
 		HTTPProbe:       config.HTTPProbe,
-		SetNonRootUser:  true, // Force the usage of a non-root user.
 		ReadinessProbe: &k8s.ProbeConfig{
 			InitialDelaySeconds: int32(config.ReadinessProbeInitialDelaySeconds),
 			TimeoutSeconds:      int32(config.ReadinessProbeTimeoutSeconds),
@@ -94,7 +95,7 @@ func main() {
 		ImagePullPolicy: config.ImagePullPolicy,
 	}
 
-	factory := controller.NewFunctionFactory(kubeClient, deployConfig)
+	factory := controller.NewFunctionFactory(kubeClient, deployConfig, configureSecurityContext)
 
 	functionNamespace := "openfaas-fn"
 	if namespace, exists := os.LookupEnv("function_namespace"); exists {
