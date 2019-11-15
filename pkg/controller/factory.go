@@ -10,14 +10,23 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+var (
+	allowPrivilegeEscalation       = false
+	runAsNonRoot                   = true
+	runAsGroup               int64 = 65532 // 'nonroot' in 'distroless'.
+	runAsUser                int64 = 65522 // 'nonroot' in 'distroless'.
+)
+
 // FunctionFactory wraps faas-netes factory
 type FunctionFactory struct {
-	Factory k8s.FunctionFactory
+	configureSecurityContext bool
+	Factory                  k8s.FunctionFactory
 }
 
-func NewFunctionFactory(clientset kubernetes.Interface, config k8s.DeploymentConfig) FunctionFactory {
+func NewFunctionFactory(clientset kubernetes.Interface, config k8s.DeploymentConfig, configureSecurityContext bool) FunctionFactory {
 	return FunctionFactory{
-		k8s.FunctionFactory{
+		configureSecurityContext: configureSecurityContext,
+		Factory: k8s.FunctionFactory{
 			Client: clientset,
 			Config: config,
 		},
@@ -65,25 +74,22 @@ func (f *FunctionFactory) MakeProbes(function *faasv1.Function) (*k8s.FunctionPr
 	return f.Factory.MakeProbes(req)
 }
 
-func (f *FunctionFactory) ConfigureReadOnlyRootFilesystem(function *faasv1.Function, deployment *appsv1.Deployment) {
-	req := functionToFunctionRequest(function)
-	f.Factory.ConfigureReadOnlyRootFilesystem(req, deployment)
-}
-
-func (f *FunctionFactory) ConfigureContainerUserID(deployment *appsv1.Deployment) {
-	f.Factory.ConfigureContainerUserID(deployment)
-}
-
-func (f *FunctionFactory) ConfigureSecurityContext(deployment *appsv1.Deployment) {
-	allowPrivilegeEscalation := false
-	deployment.Spec.Template.Spec.Containers[0].SecurityContext.AllowPrivilegeEscalation = &allowPrivilegeEscalation
-	deployment.Spec.Template.Spec.Containers[0].SecurityContext.Capabilities = &corev1.Capabilities{
-		Drop: []corev1.Capability{"ALL"},
-	}
-	runAsNonRoot := true
-	deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsGroup = deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser
-	deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsNonRoot = &runAsNonRoot
-	deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
-		FSGroup: deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser,
+func (f *FunctionFactory) ConfigureSecurityContext(function *faasv1.Function, deployment *appsv1.Deployment) {
+	if f.configureSecurityContext {
+		req := functionToFunctionRequest(function)
+		f.Factory.ConfigureReadOnlyRootFilesystem(req, deployment)
+		if deployment.Spec.Template.Spec.Containers[0].SecurityContext == nil {
+			deployment.Spec.Template.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{}
+		}
+		deployment.Spec.Template.Spec.Containers[0].SecurityContext.AllowPrivilegeEscalation = &allowPrivilegeEscalation
+		deployment.Spec.Template.Spec.Containers[0].SecurityContext.Capabilities = &corev1.Capabilities{
+			Drop: []corev1.Capability{"ALL"},
+		}
+		deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsGroup = &runAsGroup
+		deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsNonRoot = &runAsNonRoot
+		deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser = &runAsUser
+		deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
+			FSGroup: deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsGroup,
+		}
 	}
 }
