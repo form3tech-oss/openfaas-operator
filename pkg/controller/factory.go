@@ -14,7 +14,7 @@ var (
 	allowPrivilegeEscalation       = false
 	runAsNonRoot                   = true
 	runAsGroup               int64 = 65532 // 'nonroot' in 'distroless'.
-	runAsUser                int64 = 65522 // 'nonroot' in 'distroless'.
+	runAsUser                int64 = 65532 // 'nonroot' in 'distroless'.
 )
 
 // FunctionFactory wraps faas-netes factory
